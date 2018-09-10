@@ -45,6 +45,11 @@ class ECSOperator(BaseOperator):
     :type region_name: str
     :param launch_type: the launch type on which to run your task ('EC2' or 'FARGATE')
     :type launch_type: str
+    :param network_configuration: The network configuration for the task. 
+        This parameter is required for task definitions that use the awsvpc network mode to receive their own Elastic Network Interface, 
+        and it is not supported for other network modes.
+        http://boto3.readthedocs.org/en/latest/reference/services/ecs.html#ECS.Client.run_task
+    :type network_configuration: dict
     """
 
     ui_color = '#f0ede4'
@@ -54,7 +59,8 @@ class ECSOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self, task_definition, cluster, overrides,
-                 aws_conn_id=None, region_name=None, launch_type='EC2', **kwargs):
+                 aws_conn_id=None, region_name=None, launch_type='EC2',
+                 network_configuration=None, **kwargs):
         super(ECSOperator, self).__init__(**kwargs)
 
         self.aws_conn_id = aws_conn_id
@@ -63,6 +69,7 @@ class ECSOperator(BaseOperator):
         self.cluster = cluster
         self.overrides = overrides
         self.launch_type = launch_type
+        self.network_configuration = network_configuration
 
         self.hook = self.get_hook()
 
@@ -83,7 +90,8 @@ class ECSOperator(BaseOperator):
             taskDefinition=self.task_definition,
             overrides=self.overrides,
             startedBy=self.owner,
-            launchType=self.launch_type
+            launchType=self.launch_type,
+            networkConfiguration=self.network_configuration
         )
 
         failures = response['failures']
